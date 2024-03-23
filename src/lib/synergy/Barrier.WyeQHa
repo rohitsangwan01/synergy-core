@@ -1,0 +1,54 @@
+section: screens
+	flutter:
+		halfDuplexCapsLock = false
+		halfDuplexNumLock = false
+		halfDuplexScrollLock = false
+		xtestIsXineramaUnaware = false
+		preserveFocus = false
+		switchCorners = none 
+		switchCornerSize = 0
+	secondary:
+		halfDuplexCapsLock = false
+		halfDuplexNumLock = false
+		halfDuplexScrollLock = false
+		xtestIsXineramaUnaware = false
+		preserveFocus = false
+		switchCorners = none 
+		switchCornerSize = 0
+	macbook:
+		halfDuplexCapsLock = false
+		halfDuplexNumLock = false
+		halfDuplexScrollLock = false
+		xtestIsXineramaUnaware = false
+		preserveFocus = false
+		switchCorners = none 
+		switchCornerSize = 0
+end
+
+section: aliases
+	secondary:
+		linux
+		windows
+		touchscreen
+		android
+end
+
+section: links
+	flutter:
+		right = secondary
+	secondary:
+		right = macbook
+		left = flutter
+	macbook:
+		left = secondary
+end
+
+section: options
+	relativeMouseMoves = false
+	screenSaverSync = true
+	win32KeepForeground = false
+	clipboardSharing = true
+	switchCorners = none 
+	switchCornerSize = 0
+end
+
