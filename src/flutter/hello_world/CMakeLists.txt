@@ -4,6 +4,10 @@ project(api LANGUAGES CXX C)
 
 set(sources
   api.cpp
+  DummyClientProxy.cpp
+  DummyClientProxy.h
+  MyStream.cpp
+  MyStream.h
 )
 
 list(APPEND sources ${arch_sources})

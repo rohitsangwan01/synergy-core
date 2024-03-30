@@ -1,2 +1,2 @@
 add_subdirectory(hello_world)
-
+add_subdirectory(synergy_flutter)

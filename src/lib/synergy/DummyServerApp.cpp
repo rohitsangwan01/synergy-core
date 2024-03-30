@@ -1,22 +1,5 @@
-/*
- * synergy -- mouse and keyboard sharing utility
- * Copyright (C) 2012-2016 Symless Ltd.
- * Copyright (C) 2002 Chris Schoeneman
- *
- * This package is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * found in the file LICENSE that should have accompanied this file.
- *
- * This package is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 
-#include "synergy/ServerApp.h"
+#include "synergy/DummyServerApp.h"
 
 #include "arch/Arch.h"
 #include "base/EventQueue.h"
@@ -28,19 +11,19 @@
 #include "base/TMethodJob.h"
 #include "base/log_outputters.h"
 #include "common/Version.h"
-#include "net/DummySocketFactory.h"
-#include "net/InverseSockets/InverseSocketFactory.h"
-#include "net/SocketMultiplexer.h"
-#include "net/TCPSocketFactory.h"
-#include "net/XSocket.h"
-#include "server/ClientListener.h"
+// #include "net/DummySocketFactory.h"
+// #include "net/InverseSockets/InverseSocketFactory.h"
+// #include "net/SocketMultiplexer.h"
+// #include "net/TCPSocketFactory.h"
+// #include "net/XSocket.h"
+// #include "server/ClientListener.h"
 #include "server/ClientProxy.h"
+#include "server/DummyClientListener.h"
 #include "server/PrimaryClient.h"
 #include "server/Server.h"
 #include "synergy/ArgParser.h"
 #include "synergy/Screen.h"
 #include "synergy/ServerArgs.h"
-#include "synergy/ServerTaskBarReceiver.h"
 #include "synergy/XScreen.h"
 
 #if SYSAPI_WIN32
@@ -64,39 +47,38 @@
 #include <stdio.h>
 
 //
-// ServerApp
+// DummyServerApp
 //
 
-ServerApp::ServerApp(IEventQueue *events,
-                     CreateTaskBarReceiverFunc createTaskBarReceiver)
-    : App(events, createTaskBarReceiver, new lib::synergy::ServerArgs()),
-      m_server(NULL), m_serverState(kUninitialized), m_serverScreen(NULL),
+DummyServerApp::DummyServerApp(IEventQueue *events, ClientProxy *client)
+    : App(events, nullptr, new lib::synergy::ServerArgs()), m_server(NULL),
+      m_serverState(kUninitialized), m_serverScreen(NULL),
       m_primaryClient(NULL), m_listener(NULL), m_timer(NULL),
-      m_synergyAddress(NULL) {}
+      m_clientProxy(client), m_synergyAddress(NULL) {}
 
-ServerApp::~ServerApp() {}
+DummyServerApp::~DummyServerApp() {}
 
-void ServerApp::parseArgs(int argc, const char *const *argv) {
+void DummyServerApp::parseArgs(int argc, const char *const *argv) {
   ArgParser argParser(this);
   bool result = argParser.parseServerArgs(args(), argc, argv);
 
   if (!result || args().m_shouldExit) {
     m_bye(kExitArgs);
   } else {
-    if (!args().m_synergyAddress.empty()) {
-      try {
-        *m_synergyAddress =
-            NetworkAddress(args().m_synergyAddress, kDefaultPort);
-        m_synergyAddress->resolve();
-      } catch (XSocketAddress &e) {
-        LOG((CLOG_CRIT "%s: %s" BYE, args().m_pname, e.what(), args().m_pname));
-        m_bye(kExitArgs);
-      }
-    }
+    // if (!args().m_synergyAddress.empty()) {
+    //   try {
+    //     *m_synergyAddress =
+    //         NetworkAddress(args().m_synergyAddress, kDefaultPort);
+    //     m_synergyAddress->resolve();
+    //   } catch (XSocketAddress &e) {
+    //     LOG((CLOG_CRIT "%s: %s" BYE, args().m_pname, e.what(),
+    //     args().m_pname)); m_bye(kExitArgs);
+    //   }
+    // }
   }
 }
 
-void ServerApp::help() {
+void DummyServerApp::help() {
   // window api args (windows/x-windows/carbon)
 #if WINAPI_XWINDOWS
 #define WINAPI_ARGS " [--display <display>] [--no-xinitthreads]"
@@ -139,13 +121,13 @@ void ServerApp::help() {
   LOG((CLOG_PRINT "%s", buffer));
 }
 
-void ServerApp::reloadSignalHandler(Arch::ESignal, void *) {
+void DummyServerApp::reloadSignalHandler(Arch::ESignal, void *) {
   IEventQueue *events = App::instance().getEvents();
   events->addEvent(
       Event(events->forServerApp().reloadConfig(), events->getSystemTarget()));
 }
 
-void ServerApp::reloadConfig(const Event &, void *) {
+void DummyServerApp::reloadConfig(const Event &, void *) {
   LOG((CLOG_DEBUG "reload configuration"));
   if (loadConfig(args().m_configFile)) {
     if (m_server != NULL) {
@@ -155,7 +137,7 @@ void ServerApp::reloadConfig(const Event &, void *) {
   }
 }
 
-void ServerApp::loadConfig() {
+void DummyServerApp::loadConfig() {
   bool loaded = false;
 
   // load the config file, if specified
@@ -196,7 +178,7 @@ void ServerApp::loadConfig() {
   }
 }
 
-bool ServerApp::loadConfig(const String &pathname) {
+bool DummyServerApp::loadConfig(const String &pathname) {
   try {
     // load configuration
     LOG((CLOG_DEBUG "opening configuration \"%s\"", pathname.c_str()));
@@ -219,14 +201,14 @@ bool ServerApp::loadConfig(const String &pathname) {
   return false;
 }
 
-void ServerApp::forceReconnect(const Event &, void *) {
+void DummyServerApp::forceReconnect(const Event &, void *) {
   if (m_server != NULL) {
     m_server->disconnect();
   }
 }
 
-void ServerApp::handleClientConnected(const Event &, void *vlistener) {
-  ClientListener *listener = static_cast<ClientListener *>(vlistener);
+void DummyServerApp::handleClientConnected(const Event &, void *vlistener) {
+  DummyClientListener *listener = static_cast<DummyClientListener *>(vlistener);
   ClientProxy *client = listener->getNextClient();
   if (client != NULL) {
     m_server->adoptClient(client);
@@ -234,11 +216,11 @@ void ServerApp::handleClientConnected(const Event &, void *vlistener) {
   }
 }
 
-void ServerApp::handleClientsDisconnected(const Event &, void *) {
+void DummyServerApp::handleClientsDisconnected(const Event &, void *) {
   m_events->addEvent(Event(Event::kQuit));
 }
 
-void ServerApp::closeServer(Server *server) {
+void DummyServerApp::closeServer(Server *server) {
   if (server == NULL) {
     return;
   }
@@ -250,11 +232,11 @@ void ServerApp::closeServer(Server *server) {
   double timeout = 3.0;
   EventQueueTimer *timer = m_events->newOneShotTimer(timeout, NULL);
   m_events->adoptHandler(Event::kTimer, timer,
-                         new TMethodEventJob<ServerApp>(
-                             this, &ServerApp::handleClientsDisconnected));
+                         new TMethodEventJob<DummyServerApp>(
+                             this, &DummyServerApp::handleClientsDisconnected));
   m_events->adoptHandler(m_events->forServer().disconnected(), server,
-                         new TMethodEventJob<ServerApp>(
-                             this, &ServerApp::handleClientsDisconnected));
+                         new TMethodEventJob<DummyServerApp>(
+                             this, &DummyServerApp::handleClientsDisconnected));
 
   m_events->loop();
 
@@ -266,7 +248,7 @@ void ServerApp::closeServer(Server *server) {
   delete server;
 }
 
-void ServerApp::stopRetryTimer() {
+void DummyServerApp::stopRetryTimer() {
   if (m_timer != NULL) {
     m_events->removeHandler(Event::kTimer, m_timer);
     m_events->deleteTimer(m_timer);
@@ -274,22 +256,18 @@ void ServerApp::stopRetryTimer() {
   }
 }
 
-void ServerApp::updateStatus() { updateStatus(""); }
+void DummyServerApp::updateStatus() { updateStatus(""); }
 
-void ServerApp::updateStatus(const String &msg) {
-  if (m_taskBarReceiver) {
-    m_taskBarReceiver->updateStatus(m_server, msg);
-  }
-}
+void DummyServerApp::updateStatus(const String &msg) {}
 
-void ServerApp::closeClientListener(ClientListener *listen) {
+void DummyServerApp::closeClientListener(DummyClientListener *listen) {
   if (listen != NULL) {
     m_events->removeHandler(m_events->forClientListener().connected(), listen);
     delete listen;
   }
 }
 
-void ServerApp::stopServer() {
+void DummyServerApp::stopServer() {
   if (m_serverState == kStarted) {
     closeServer(m_server);
     closeClientListener(m_listener);
@@ -304,11 +282,11 @@ void ServerApp::stopServer() {
   assert(m_listener == NULL);
 }
 
-void ServerApp::closePrimaryClient(PrimaryClient *primaryClient) {
+void DummyServerApp::closePrimaryClient(PrimaryClient *primaryClient) {
   delete primaryClient;
 }
 
-void ServerApp::closeServerScreen(synergy::Screen *screen) {
+void DummyServerApp::closeServerScreen(synergy::Screen *screen) {
   if (screen != NULL) {
     m_events->removeHandler(m_events->forIScreen().error(),
                             screen->getEventTarget());
@@ -320,7 +298,7 @@ void ServerApp::closeServerScreen(synergy::Screen *screen) {
   }
 }
 
-void ServerApp::cleanupServer() {
+void DummyServerApp::cleanupServer() {
   stopServer();
   if (m_serverState == kInitialized) {
     closePrimaryClient(m_primaryClient);
@@ -338,7 +316,7 @@ void ServerApp::cleanupServer() {
   assert(m_serverState == kUninitialized);
 }
 
-void ServerApp::retryHandler(const Event &, void *) {
+void DummyServerApp::retryHandler(const Event &, void *) {
   // discard old timer
   assert(m_timer != NULL);
   stopRetryTimer();
@@ -382,7 +360,7 @@ void ServerApp::retryHandler(const Event &, void *) {
   }
 }
 
-bool ServerApp::initServer() {
+bool DummyServerApp::initServer() {
   // skip if already initialized or initializing
   if (m_serverState != kUninitialized) {
     return true;
@@ -423,9 +401,9 @@ bool ServerApp::initServer() {
     assert(m_timer == NULL);
     LOG((CLOG_DEBUG "retry in %.0f seconds", retryTime));
     m_timer = m_events->newOneShotTimer(retryTime, NULL);
-    m_events->adoptHandler(
-        Event::kTimer, m_timer,
-        new TMethodEventJob<ServerApp>(this, &ServerApp::retryHandler));
+    m_events->adoptHandler(Event::kTimer, m_timer,
+                           new TMethodEventJob<DummyServerApp>(
+                               this, &DummyServerApp::retryHandler));
     m_serverState = kInitializing;
     return true;
   } else {
@@ -434,22 +412,24 @@ bool ServerApp::initServer() {
   }
 }
 
-synergy::Screen *ServerApp::openServerScreen() {
+synergy::Screen *DummyServerApp::openServerScreen() {
   synergy::Screen *screen = createScreen();
   screen->setEnableDragDrop(argsBase().m_enableDragDrop);
-  m_events->adoptHandler(
-      m_events->forIScreen().error(), screen->getEventTarget(),
-      new TMethodEventJob<ServerApp>(this, &ServerApp::handleScreenError));
-  m_events->adoptHandler(
-      m_events->forIScreen().suspend(), screen->getEventTarget(),
-      new TMethodEventJob<ServerApp>(this, &ServerApp::handleSuspend));
+  m_events->adoptHandler(m_events->forIScreen().error(),
+                         screen->getEventTarget(),
+                         new TMethodEventJob<DummyServerApp>(
+                             this, &DummyServerApp::handleScreenError));
+  m_events->adoptHandler(m_events->forIScreen().suspend(),
+                         screen->getEventTarget(),
+                         new TMethodEventJob<DummyServerApp>(
+                             this, &DummyServerApp::handleSuspend));
   m_events->adoptHandler(
       m_events->forIScreen().resume(), screen->getEventTarget(),
-      new TMethodEventJob<ServerApp>(this, &ServerApp::handleResume));
+      new TMethodEventJob<DummyServerApp>(this, &DummyServerApp::handleResume));
   return screen;
 }
 
-bool ServerApp::startServer() {
+bool DummyServerApp::startServer() {
   // skip if already started or starting
   if (m_serverState == kStarting || m_serverState == kStarted) {
     return true;
@@ -469,26 +449,28 @@ bool ServerApp::startServer() {
     assert(m_serverState == kInitialized);
   }
 
-  ClientListener *listener = NULL;
+  DummyClientListener *listener = NULL;
   try {
     listener = openClientListener(args().m_config->getSynergyAddress());
     m_server = openServer(*args().m_config, m_primaryClient);
     listener->setServer(m_server);
-    m_server->setListener(listener);
+    m_server->setDummyListener(listener);
     m_listener = listener;
     updateStatus();
     LOG((CLOG_NOTE "started server, waiting for clients"));
     m_serverState = kStarted;
     return true;
-  } catch (XSocketAddressInUse &e) {
-    if (args().m_restartable) {
-      LOG((CLOG_ERR "cannot listen for clients: %s", e.what()));
-    } else {
-      LOG((CLOG_CRIT "cannot listen for clients: %s", e.what()));
-    }
-    closeClientListener(listener);
-    updateStatus(String("cannot listen for clients: ") + e.what());
-  } catch (XBase &e) {
+  }
+  // catch (XSocketAddressInUse &e) {
+  //   if (args().m_restartable) {
+  //     LOG((CLOG_ERR "cannot listen for clients: %s", e.what()));
+  //   } else {
+  //     LOG((CLOG_CRIT "cannot listen for clients: %s", e.what()));
+  //   }
+  //   closeClientListener(listener);
+  //   updateStatus(String("cannot listen for clients: ") + e.what());
+  // }
+  catch (XBase &e) {
     LOG((CLOG_CRIT "failed to start server: %s", e.what()));
     closeClientListener(listener);
     return false;
@@ -500,9 +482,9 @@ bool ServerApp::startServer() {
     const auto retryTime = 10.0;
     LOG((CLOG_DEBUG "retry in %.0f seconds", retryTime));
     m_timer = m_events->newOneShotTimer(retryTime, NULL);
-    m_events->adoptHandler(
-        Event::kTimer, m_timer,
-        new TMethodEventJob<ServerApp>(this, &ServerApp::retryHandler));
+    m_events->adoptHandler(Event::kTimer, m_timer,
+                           new TMethodEventJob<DummyServerApp>(
+                               this, &DummyServerApp::retryHandler));
     m_serverState = kStarting;
     return true;
   } else {
@@ -511,7 +493,7 @@ bool ServerApp::startServer() {
   }
 }
 
-synergy::Screen *ServerApp::createScreen() {
+synergy::Screen *DummyServerApp::createScreen() {
 #if WINAPI_MSWINDOWS
   return new synergy::Screen(new MSWindowsScreen(true, args().m_noHooks,
                                                  args().m_stopOnDeskSwitch,
@@ -527,18 +509,18 @@ synergy::Screen *ServerApp::createScreen() {
 #endif
 }
 
-PrimaryClient *ServerApp::openPrimaryClient(const String &name,
-                                            synergy::Screen *screen) {
+PrimaryClient *DummyServerApp::openPrimaryClient(const String &name,
+                                                 synergy::Screen *screen) {
   LOG((CLOG_DEBUG1 "creating primary screen"));
   return new PrimaryClient(name, screen);
 }
 
-void ServerApp::handleScreenError(const Event &, void *) {
+void DummyServerApp::handleScreenError(const Event &, void *) {
   LOG((CLOG_CRIT "error on screen"));
   m_events->addEvent(Event(Event::kQuit));
 }
 
-void ServerApp::handleSuspend(const Event &, void *) {
+void DummyServerApp::handleSuspend(const Event &, void *) {
   if (!m_suspended) {
     LOG((CLOG_INFO "suspend"));
     stopServer();
@@ -546,7 +528,7 @@ void ServerApp::handleSuspend(const Event &, void *) {
   }
 }
 
-void ServerApp::handleResume(const Event &, void *) {
+void DummyServerApp::handleResume(const Event &, void *) {
   if (m_suspended) {
     LOG((CLOG_INFO "resume"));
     startServer();
@@ -554,28 +536,31 @@ void ServerApp::handleResume(const Event &, void *) {
   }
 }
 
-ClientListener *ServerApp::openClientListener(const NetworkAddress &address) {
-  ClientListener *listen = new ClientListener(
-      getAddress(address), getSocketFactory(), m_events, args().m_enableCrypto);
+DummyClientListener *
+DummyServerApp::openClientListener(const NetworkAddress &address) {
+  DummyClientListener *listen =
+      new DummyClientListener(m_clientProxy, m_events, args().m_enableCrypto);
 
-  m_events->adoptHandler(m_events->forClientListener().connected(), listen,
-                         new TMethodEventJob<ServerApp>(
-                             this, &ServerApp::handleClientConnected, listen));
+  m_events->adoptHandler(
+      m_events->forClientListener().connected(), listen,
+      new TMethodEventJob<DummyServerApp>(
+          this, &DummyServerApp::handleClientConnected, listen));
 
   return listen;
 }
 
-Server *ServerApp::openServer(Config &config, PrimaryClient *primaryClient) {
+Server *DummyServerApp::openServer(Config &config,
+                                   PrimaryClient *primaryClient) {
   Server *server =
       new Server(config, primaryClient, m_serverScreen, m_events, args());
   try {
-    m_events->adoptHandler(
-        m_events->forServer().disconnected(), server,
-        new TMethodEventJob<ServerApp>(this, &ServerApp::handleNoClients));
+    m_events->adoptHandler(m_events->forServer().disconnected(), server,
+                           new TMethodEventJob<DummyServerApp>(
+                               this, &DummyServerApp::handleNoClients));
 
-    m_events->adoptHandler(
-        m_events->forServer().screenSwitched(), server,
-        new TMethodEventJob<ServerApp>(this, &ServerApp::handleScreenSwitched));
+    m_events->adoptHandler(m_events->forServer().screenSwitched(), server,
+                           new TMethodEventJob<DummyServerApp>(
+                               this, &DummyServerApp::handleScreenSwitched));
 
   } catch (std::bad_alloc &ba) {
     delete server;
@@ -585,24 +570,11 @@ Server *ServerApp::openServer(Config &config, PrimaryClient *primaryClient) {
   return server;
 }
 
-void ServerApp::handleNoClients(const Event &, void *) { updateStatus(); }
+void DummyServerApp::handleNoClients(const Event &, void *) { updateStatus(); }
 
-void ServerApp::handleScreenSwitched(const Event &e, void *) {}
+void DummyServerApp::handleScreenSwitched(const Event &e, void *) {}
 
-ISocketFactory *ServerApp::getSocketFactory() const {
-  ISocketFactory *socketFactory = nullptr;
-
-  if (args().m_config->isClientMode()) {
-    socketFactory = new InverseSocketFactory(m_events, getSocketMultiplexer());
-  } else {
-    // socketFactory = new TCPSocketFactory(m_events, getSocketMultiplexer());
-    socketFactory = new DummySocketFactory(m_events, getSocketMultiplexer());
-  }
-
-  return socketFactory;
-}
-
-NetworkAddress ServerApp::getAddress(const NetworkAddress &address) const {
+NetworkAddress DummyServerApp::getAddress(const NetworkAddress &address) const {
   if (args().m_config->isClientMode()) {
     const auto clientAddress = args().m_config->getClientAddress();
     NetworkAddress addr(clientAddress.c_str(), kDefaultPort);
@@ -613,11 +585,9 @@ NetworkAddress ServerApp::getAddress(const NetworkAddress &address) const {
   }
 }
 
-int ServerApp::mainLoop() {
+int DummyServerApp::mainLoop() {
   // create socket multiplexer.  this must happen after daemonization
   // on unix because threads evaporate across a fork().
-  SocketMultiplexer multiplexer;
-  setSocketMultiplexer(&multiplexer);
 
   // if configuration has no screens then add this system
   // as the default
@@ -654,19 +624,20 @@ int ServerApp::mainLoop() {
   ARCH->setSignalHandler(Arch::kHANGUP, &reloadSignalHandler, NULL);
   m_events->adoptHandler(
       m_events->forServerApp().reloadConfig(), m_events->getSystemTarget(),
-      new TMethodEventJob<ServerApp>(this, &ServerApp::reloadConfig));
+      new TMethodEventJob<DummyServerApp>(this, &DummyServerApp::reloadConfig));
 
   // handle force reconnect event by disconnecting clients.  they'll
   // reconnect automatically.
-  m_events->adoptHandler(
-      m_events->forServerApp().forceReconnect(), m_events->getSystemTarget(),
-      new TMethodEventJob<ServerApp>(this, &ServerApp::forceReconnect));
+  m_events->adoptHandler(m_events->forServerApp().forceReconnect(),
+                         m_events->getSystemTarget(),
+                         new TMethodEventJob<DummyServerApp>(
+                             this, &DummyServerApp::forceReconnect));
 
   // to work around the sticky meta keys problem, we'll give users
   // the option to reset the state of synergys
   m_events->adoptHandler(
       m_events->forServerApp().resetServer(), m_events->getSystemTarget(),
-      new TMethodEventJob<ServerApp>(this, &ServerApp::resetServer));
+      new TMethodEventJob<DummyServerApp>(this, &DummyServerApp::resetServer));
 
   // run event loop.  if startServer() failed we're supposed to retry
   // later.  the timer installed by startServer() will take care of
@@ -675,8 +646,8 @@ int ServerApp::mainLoop() {
 
 #if defined(MAC_OS_X_VERSION_10_7)
 
-  Thread thread(
-      new TMethodJob<ServerApp>(this, &ServerApp::runEventsLoop, NULL));
+  Thread thread(new TMethodJob<DummyServerApp>(
+      this, &DummyServerApp::runEventsLoop, NULL));
 
   // wait until carbon loop is ready
   OSXScreen *screen =
@@ -707,15 +678,15 @@ int ServerApp::mainLoop() {
   return kExitSuccess;
 }
 
-void ServerApp::resetServer(const Event &, void *) {
+void DummyServerApp::resetServer(const Event &, void *) {
   LOG((CLOG_DEBUG1 "resetting server"));
   stopServer();
   cleanupServer();
   startServer();
 }
 
-int ServerApp::runInner(int argc, char **argv, ILogOutputter *outputter,
-                        StartupFunc startup) {
+int DummyServerApp::runInner(int argc, char **argv, ILogOutputter *outputter,
+                             StartupFunc startup) {
   // general initialization
   m_synergyAddress = new NetworkAddress;
   args().m_config = std::make_shared<Config>(m_events);
@@ -729,20 +700,15 @@ int ServerApp::runInner(int argc, char **argv, ILogOutputter *outputter,
   // run
   int result = startup(argc, argv);
 
-  if (m_taskBarReceiver) {
-    // done with task bar receiver
-    delete m_taskBarReceiver;
-  }
-
   delete m_synergyAddress;
   return result;
 }
 
 int daemonMainLoopStatic(int argc, const char **argv) {
-  return ServerApp::instance().daemonMainLoop(argc, argv);
+  return DummyServerApp::instance().daemonMainLoop(argc, argv);
 }
 
-int ServerApp::standardStartup(int argc, char **argv) {
+int DummyServerApp::standardStartup(int argc, char **argv) {
   initApp(argc, argv);
 
   // daemonize if requested
@@ -753,14 +719,14 @@ int ServerApp::standardStartup(int argc, char **argv) {
   }
 }
 
-int ServerApp::foregroundStartup(int argc, char **argv) {
+int DummyServerApp::foregroundStartup(int argc, char **argv) {
   initApp(argc, argv);
 
   // never daemonize
   return mainLoop();
 }
 
-const char *ServerApp::daemonName() const {
+const char *DummyServerApp::daemonName() const {
 #if SYSAPI_WIN32
   return "Synergy Server";
 #elif SYSAPI_UNIX
@@ -768,7 +734,7 @@ const char *ServerApp::daemonName() const {
 #endif
 }
 
-const char *ServerApp::daemonInfo() const {
+const char *DummyServerApp::daemonInfo() const {
 #if SYSAPI_WIN32
   return "Shares this computers mouse and keyboard with other computers.";
 #elif SYSAPI_UNIX
@@ -776,7 +742,7 @@ const char *ServerApp::daemonInfo() const {
 #endif
 }
 
-void ServerApp::startNode() {
+void DummyServerApp::startNode() {
   // start the server.  if this return false then we've failed and
   // we shouldn't retry.
   LOG((CLOG_DEBUG1 "starting server"));

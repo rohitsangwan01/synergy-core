@@ -1432,7 +1432,13 @@ Server::handleClientDisconnected(const Event&, void* vclient)
 	removeOldClient(client);
 
 	delete client;
-	m_clientListener->restart();
+	if(m_clientListener != nullptr){
+		m_clientListener->restart();
+	}
+	if(m_dummy_clientListener != nullptr){
+		m_dummy_clientListener->restart();
+	}
+
 }
 
 void
