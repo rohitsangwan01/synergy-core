@@ -28,7 +28,6 @@
 #include "base/TMethodJob.h"
 #include "base/log_outputters.h"
 #include "common/Version.h"
-#include "net/DummySocketFactory.h"
 #include "net/InverseSockets/InverseSocketFactory.h"
 #include "net/SocketMultiplexer.h"
 #include "net/TCPSocketFactory.h"
@@ -595,8 +594,7 @@ ISocketFactory *ServerApp::getSocketFactory() const {
   if (args().m_config->isClientMode()) {
     socketFactory = new InverseSocketFactory(m_events, getSocketMultiplexer());
   } else {
-    // socketFactory = new TCPSocketFactory(m_events, getSocketMultiplexer());
-    socketFactory = new DummySocketFactory(m_events, getSocketMultiplexer());
+    socketFactory = new TCPSocketFactory(m_events, getSocketMultiplexer());
   }
 
   return socketFactory;
