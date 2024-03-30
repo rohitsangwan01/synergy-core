@@ -274,24 +274,27 @@ void DummyClientProxy::setClipboardDirty(ClipboardID id, bool dirty) {
   m_clipboard[id].m_dirty = dirty;
 }
 
-void DummyClientProxy::keyDown(KeyID key, KeyModifierMask mask, KeyButton,
-                               const String &) {
-  LOG((CLOG_DEBUG "send key down to \"%s\" id=%d, mask=0x%04x",
-       getName().c_str(), key, mask));
-  ProtocolUtil::writef(getStream(), kMsgDKeyDown1_0, key, mask);
+void DummyClientProxy::keyDown(KeyID key, KeyModifierMask mask,
+                               KeyButton button, const String &) {
+  LOG((CLOG_DEBUG1 "send key down to \"%s\" id=%d, mask=0x%04x, button=0x%04x",
+       getName().c_str(), key, mask, button));
+  ProtocolUtil::writef(getStream(), kMsgDKeyDown, key, mask, button);
 }
 
 void DummyClientProxy::keyRepeat(KeyID key, KeyModifierMask mask, SInt32 count,
-                                 KeyButton, const String &) {
-  LOG((CLOG_DEBUG "send key repeat to \"%s\" id=%d, mask=0x%04x, count=%d",
-       getName().c_str(), key, mask, count));
-  ProtocolUtil::writef(getStream(), kMsgDKeyRepeat1_0, key, mask, count);
+                                 KeyButton button, const String &lang) {
+  LOG((CLOG_DEBUG1 "send key repeat to \"%s\" id=%d, mask=0x%04x, count=%d, "
+                   "button=0x%04x, lang=\"%s\"",
+       getName().c_str(), key, mask, count, button, lang.c_str()));
+  ProtocolUtil::writef(getStream(), kMsgDKeyRepeat, key, mask, count, button,
+                       &lang);
 }
 
-void DummyClientProxy::keyUp(KeyID key, KeyModifierMask mask, KeyButton) {
-  LOG((CLOG_DEBUG "send key up to \"%s\" id=%d, mask=0x%04x", getName().c_str(),
-       key, mask));
-  ProtocolUtil::writef(getStream(), kMsgDKeyUp1_0, key, mask);
+void DummyClientProxy::keyUp(KeyID key, KeyModifierMask mask,
+                             KeyButton button) {
+  LOG((CLOG_DEBUG1 "send key up to \"%s\" id=%d, mask=0x%04x, button=0x%04x",
+       getName().c_str(), key, mask, button));
+  ProtocolUtil::writef(getStream(), kMsgDKeyUp, key, mask, button);
 }
 
 void DummyClientProxy::mouseDown(ButtonID button) {
@@ -311,8 +314,10 @@ void DummyClientProxy::mouseMove(SInt32 xAbs, SInt32 yAbs) {
   ProtocolUtil::writef(getStream(), kMsgDMouseMove, xAbs, yAbs);
 }
 
-void DummyClientProxy::mouseRelativeMove(SInt32, SInt32) {
-  // ignore -- not supported in protocol 1.0
+void DummyClientProxy::mouseRelativeMove(SInt32 xRel, SInt32 yRel) {
+  LOG((CLOG_DEBUG2 "send mouse relative move to \"%s\" %d,%d",
+       getName().c_str(), xRel, yRel));
+  ProtocolUtil::writef(getStream(), kMsgDMouseRelMove, xRel, yRel);
 }
 
 void DummyClientProxy::mouseWheel(SInt32, SInt32 yDelta) {
