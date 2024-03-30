@@ -51,6 +51,7 @@ public:
   String getSecureInputApp() const override;
   void secureInputNotification(const String &app) const override;
   bool setDeviceInfo(ClientInfo clientInfo);
+  void handleDataFromClient(std::string data);
 
 protected:
   virtual bool parseHandshakeMessage(const UInt8 *code);

@@ -10,11 +10,14 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 DummyClientProxy::DummyClientProxy(const String &name, synergy::IStream *stream,
                                    IEventQueue *events, ClientInfo info)
     : ClientProxy(name, stream), m_heartbeatTimer(NULL), m_info(info),
-      m_parser(&DummyClientProxy::parseHandshakeMessage), m_events(events) {
+      m_parser(&DummyClientProxy::parseMessage), m_events(events) {
 
   // install event handlers
   m_events->adoptHandler(m_events->forIStream().inputReady(),
@@ -95,6 +98,43 @@ void DummyClientProxy::resetHeartbeatRate() {
 
 void DummyClientProxy::setHeartbeatRate(double, double alarm) {
   m_heartbeatAlarm = alarm;
+}
+
+void DummyClientProxy::handleDataFromClient(std::string msg) {
+  // HandleData
+  std::vector<int> data;
+  msg = msg.substr(1, msg.size() - 2);
+  std::stringstream ss(msg);
+  std::string temp;
+  while (std::getline(ss, temp, ',')) {
+    data.push_back(std::stoi(temp));
+  }
+  // print list
+  std::cout << "HandleDataFromClientCpp: " << msg << std::endl;
+
+  // Handle messages until there are no more.  first read message code.
+  // Implement this to send in stream
+  // UInt8 code[4];
+  // size_t dataIndex = 0;
+  // while (dataIndex < data.size()) {
+  //   if (dataIndex + 4 > data.size()) {
+  //     LOG((CLOG_ERR "incomplete message from \"%s\": %d bytes",
+  //          getName().c_str(), data.size() - dataIndex));
+  //     disconnect();
+  //     return;
+  //   }
+  //   for (int i = 0; i < 4; ++i) {
+  //     code[i] = static_cast<UInt8>(data[dataIndex + i]);
+  //   }
+  //   LOG((CLOG_INFO "msg from \"%s\": %c%c%c%c", getName().c_str(), code[0],
+  //        code[1], code[2], code[3]));
+  //   if (!(this->*m_parser)(code)) {
+  //     LOG((CLOG_ERR "invalid message from client \"%s\": %c%c%c%c",
+  //          getName().c_str(), code[0], code[1], code[2], code[3]));
+  //   }
+  //   dataIndex += 4;
+  // }
+  // resetHeartbeatTimer();
 }
 
 void DummyClientProxy::handleData(const Event &, void *) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
@@ -33,7 +34,7 @@ class CmdServer extends ServerInterface {
   ) async {
     _process = await Process.start(
       "/Users/rohitsangwan/Drive/Devlopment/c++/synergy_core_clean/build/bin/synergy_flutter",
-      [],
+      ["-wi", "1920", "-hi", "1080"],
     );
 
     _process?.stdout.listen((event) {
@@ -58,6 +59,8 @@ class CmdServer extends ServerInterface {
           }
 
           onData(Uint8List.fromList(intBytes));
+        } else if (element.isNotEmpty) {
+          print("Data: $element");
         }
       });
     });
@@ -75,7 +78,7 @@ class CmdServer extends ServerInterface {
   @override
   Future<void> write(Uint8List data) async {
     print("WRITING TO SERVER: $data");
-    _process?.stdin.write(data);
+    _process?.stdin.writeln(data);
   }
 }
 
