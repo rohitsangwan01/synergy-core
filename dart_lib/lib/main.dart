@@ -7,6 +7,9 @@ import 'package:synergy_client_dart/synergy_client_dart.dart';
 import 'generated_bindings.dart';
 
 void main(List<String> args) async {
+  // executeNative();
+  // return;
+
   BasicScreen screen = BasicScreen();
 
   SynergyClientDart.setLogLevel(LogLevel.debug1);
@@ -151,4 +154,6 @@ void executeNative() async {
 
   Pointer<Pointer<Char>> argv = calloc<Pointer<Char>>();
   nativeLibrary.startServer(0, argv);
+  await Future.delayed(const Duration(seconds: 5));
+  print("Done");
 }

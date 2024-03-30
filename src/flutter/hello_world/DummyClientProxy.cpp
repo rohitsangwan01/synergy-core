@@ -11,8 +11,8 @@
 #include <iostream>
 
 DummyClientProxy::DummyClientProxy(const String &name, synergy::IStream *stream,
-                                   IEventQueue *events)
-    : ClientProxy(name, stream), m_heartbeatTimer(NULL),
+                                   IEventQueue *events, ClientInfo info)
+    : ClientProxy(name, stream), m_heartbeatTimer(NULL), m_info(info),
       m_parser(&DummyClientProxy::parseHandshakeMessage), m_events(events) {
 
   // install event handlers

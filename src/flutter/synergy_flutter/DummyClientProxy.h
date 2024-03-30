@@ -13,7 +13,7 @@ class IEventQueue;
 class DummyClientProxy : public ClientProxy {
 public:
   DummyClientProxy(const String &name, synergy::IStream *adoptedStream,
-                   IEventQueue *events);
+                   IEventQueue *events, ClientInfo info);
   DummyClientProxy(DummyClientProxy const &) = delete;
   DummyClientProxy(DummyClientProxy &&) = delete;
   ~DummyClientProxy();
@@ -50,6 +50,7 @@ public:
   void fileChunkSending(UInt8 mark, char *data, size_t dataSize) override;
   String getSecureInputApp() const override;
   void secureInputNotification(const String &app) const override;
+  bool setDeviceInfo(ClientInfo clientInfo);
 
 protected:
   virtual bool parseHandshakeMessage(const UInt8 *code);
@@ -72,7 +73,6 @@ private:
   void handleFlatline(const Event &, void *);
 
   bool recvInfo();
-  bool setDeviceInfo();
   bool recvGrabClipboard();
 
 protected:

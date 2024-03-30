@@ -12,8 +12,8 @@
 #include <iostream>
 
 DummyClientProxy::DummyClientProxy(const String &name, synergy::IStream *stream,
-                                   IEventQueue *events)
-    : ClientProxy(name, stream), m_heartbeatTimer(NULL),
+                                   IEventQueue *events, ClientInfo info)
+    : ClientProxy(name, stream), m_heartbeatTimer(NULL), m_info(info),
       m_parser(&DummyClientProxy::parseHandshakeMessage), m_events(events) {
 
   // install event handlers
@@ -41,17 +41,8 @@ DummyClientProxy::DummyClientProxy(const String &name, synergy::IStream *stream,
 
   LOG((CLOG_INFO "querying client \"%s\" info", getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgQInfo);
-  setDeviceInfo();
 
-  // while (!std::cin.eof()) {
-  //  unsigned int len = 0;
-  //  std::cin.read(reinterpret_cast<char *>(&len), 4);
-  //  if (len > 0) {
-  //    char *msgBuf = new char[len];
-  //    std::cin.read(msgBuf, len);
-  //    std::cout << "Received: " << msgBuf << std::endl;
-  //  }
-  // }
+  // Set device Info
 }
 
 DummyClientProxy::~DummyClientProxy() { removeHandlers(); }
@@ -347,35 +338,9 @@ void DummyClientProxy::setOptions(const OptionsList &options) {
   }
 }
 
-bool DummyClientProxy::setDeviceInfo() {
-  SInt16 x = 0;
-  SInt16 y = 0;
-  SInt16 w = 1920;
-  SInt16 h = 1080;
-  SInt16 mx = 960;
-  SInt16 my = 540;
-
-  LOG((CLOG_INFO "received client \"%s\" info shape=%d,%d %dx%d at %d,%d",
-       getName().c_str(), x, y, w, h, mx, my));
-
-  // validate
-  if (w <= 0 || h <= 0) {
-    return false;
-  }
-  if (mx < x || mx >= x + w || my < y || my >= y + h) {
-    mx = x + w / 2;
-    my = y + h / 2;
-  }
-
-  // save
-  m_info.m_x = x;
-  m_info.m_y = y;
-  m_info.m_w = w;
-  m_info.m_h = h;
-  m_info.m_mx = mx;
-  m_info.m_my = my;
-
-  // acknowledge receipt
+bool DummyClientProxy::setDeviceInfo(ClientInfo clientInfo) {
+  LOG((CLOG_INFO "received client info"));
+  m_info = clientInfo;
   LOG((CLOG_INFO "send info ack to \"%s\"", getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgCInfoAck);
   return true;

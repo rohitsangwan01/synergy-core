@@ -29,7 +29,14 @@ void startServer(int argc, char **argv) {
   EventQueue events;
 
   synergy::IStream *adoptedStream = new MyStream();
-  DummyClientProxy client("flutter", adoptedStream, &events);
+  ClientInfo clientInfo = ClientInfo();
+  clientInfo.m_x = 0;
+  clientInfo.m_y = 0;
+  clientInfo.m_w = 1920;
+  clientInfo.m_h = 1080;
+  clientInfo.m_mx = 960;
+  clientInfo.m_my = 540;
+  DummyClientProxy client("flutter", adoptedStream, &events, clientInfo);
 
   DummyServerApp app(&events, &client);
 

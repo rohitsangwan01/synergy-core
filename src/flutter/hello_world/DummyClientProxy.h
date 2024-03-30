@@ -13,7 +13,7 @@ class IEventQueue;
 class DummyClientProxy : public ClientProxy {
 public:
   DummyClientProxy(const String &name, synergy::IStream *adoptedStream,
-                   IEventQueue *events);
+                   IEventQueue *events, ClientInfo info);
   DummyClientProxy(DummyClientProxy const &) = delete;
   DummyClientProxy(DummyClientProxy &&) = delete;
   ~DummyClientProxy();
