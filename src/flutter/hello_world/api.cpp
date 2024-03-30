@@ -1,4 +1,5 @@
 #include "synergy/ServerArgs.h"
+#include <cstdio>
 #define EXPORT                                                                 \
   extern "C" __attribute__((visibility("default"))) __attribute__((used))
 #include "DummyClientProxy.h"
@@ -27,18 +28,6 @@ void startServer(int argc, char **argv) {
   Log log;
   EventQueue events;
 
-  // Listen to event updates
-
-  // app.args().m_configFile = "config.json";
-  // add -c and -d flags
-  // argv[1] = "-c";
-  // argv[2] =
-  // "/Users/rohitsangwan/Drive/Devlopment/c++/synergy_core_clean/synergy.conf";
-  // argv[3] = "-f";
-
-  // app.stopServer();
-  // app.startServer();
-
   synergy::IStream *adoptedStream = new MyStream();
   DummyClientProxy client("flutter", adoptedStream, &events);
 
@@ -46,6 +35,12 @@ void startServer(int argc, char **argv) {
 
   app.args().m_configFile = "/Users/rohitsangwan/Drive/Devlopment/c++/"
                             "synergy_core_clean/synergy.conf";
-  app.args().m_daemon = false;
+  app.args().m_daemon = false; // -f
+
+  // Print the arguments
+  printf("Starting app\n");
   app.run(argc, argv);
+  printf("Closing app\n");
+  // app.stopServer();
+  // app.startServer();
 }

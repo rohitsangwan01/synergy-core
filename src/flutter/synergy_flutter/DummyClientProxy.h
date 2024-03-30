@@ -72,7 +72,7 @@ private:
   void handleFlatline(const Event &, void *);
 
   bool recvInfo();
-  bool setDevideInfo();
+  bool setDeviceInfo();
   bool recvGrabClipboard();
 
 protected:

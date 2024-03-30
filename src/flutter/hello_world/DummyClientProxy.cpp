@@ -8,11 +8,13 @@
 #include "synergy/XSynergy.h"
 
 #include <cstring>
+#include <iostream>
 
 DummyClientProxy::DummyClientProxy(const String &name, synergy::IStream *stream,
                                    IEventQueue *events)
     : ClientProxy(name, stream), m_heartbeatTimer(NULL),
       m_parser(&DummyClientProxy::parseHandshakeMessage), m_events(events) {
+
   // install event handlers
   m_events->adoptHandler(m_events->forIStream().inputReady(),
                          stream->getEventTarget(),
@@ -38,7 +40,7 @@ DummyClientProxy::DummyClientProxy(const String &name, synergy::IStream *stream,
 
   LOG((CLOG_INFO "querying client \"%s\" info", getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgQInfo);
-  setDevideInfo();
+  setDeviceInfo();
 }
 
 DummyClientProxy::~DummyClientProxy() { removeHandlers(); }
@@ -112,8 +114,6 @@ void DummyClientProxy::handleData(const Event &, void *) {
     if (!(this->*m_parser)(code)) {
       LOG((CLOG_ERR "invalid message from client \"%s\": %c%c%c%c",
            getName().c_str(), code[0], code[1], code[2], code[3]));
-      // not possible to determine message boundaries
-      // read the whole stream to discard unkonwn data
       while (getStream()->read(nullptr, 4))
         ;
     }
@@ -335,7 +335,8 @@ void DummyClientProxy::setOptions(const OptionsList &options) {
     }
   }
 }
-bool DummyClientProxy::setDevideInfo() {
+
+bool DummyClientProxy::setDeviceInfo() {
   SInt16 x = 0;
   SInt16 y = 0;
   SInt16 w = 1920;
@@ -433,10 +434,6 @@ bool DummyClientProxy::recvGrabClipboard() {
 
   return true;
 }
-
-//
-// DummyClientProxy::ClientClipboard
-//
 
 DummyClientProxy::ClientClipboard::ClientClipboard()
     : m_clipboard(), m_sequenceNumber(0), m_dirty(true) {

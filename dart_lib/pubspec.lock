@@ -321,6 +321,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  synergy_client_dart:
+    dependency: "direct main"
+    description:
+      path: "/Users/rohitsangwan/Drive/Devlopment/flutter/flutter_synergy_core/flutter_synergy/packages/synergy_client_dart"
+      relative: false
+    source: path
+    version: "0.0.5"
   term_glyph:
     dependency: transitive
     description:

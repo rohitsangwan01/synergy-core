@@ -2,6 +2,7 @@ name: synergy_test
 description: A sample command-line application.
 version: 1.0.0
 # repository: https://github.com/my_org/my_repo
+publish_to: none
 
 environment:
   sdk: ^3.2.5
@@ -10,6 +11,8 @@ environment:
 dependencies:
   ffi: ^2.1.2
   ffigen: ^11.0.0
+  synergy_client_dart:
+    path: /Users/rohitsangwan/Drive/Devlopment/flutter/flutter_synergy_core/flutter_synergy/packages/synergy_client_dart
 
 ffigen:
   output: 'dart_lib/generated_bindings.dart'
