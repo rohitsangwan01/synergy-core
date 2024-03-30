@@ -152,7 +152,7 @@ App::run(int argc, char** argv)
         LOG((CLOG_CRIT "an error occurred: %s\n", e.what()));
     }
     catch (...) {
-        LOG((CLOG_CRIT "an unknown error occurred\n"));
+        LOG((CLOG_CRIT "an unknown error occurred from app\n"));
     }
 
     appUtil().beforeAppExit();

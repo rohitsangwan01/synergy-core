@@ -38,6 +38,7 @@ DummyClientProxy::DummyClientProxy(const String &name, synergy::IStream *stream,
 
   LOG((CLOG_INFO "querying client \"%s\" info", getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgQInfo);
+  setDevideInfo();
 }
 
 DummyClientProxy::~DummyClientProxy() { removeHandlers(); }
@@ -334,8 +335,43 @@ void DummyClientProxy::setOptions(const OptionsList &options) {
     }
   }
 }
+bool DummyClientProxy::setDevideInfo() {
+  SInt16 x = 0;
+  SInt16 y = 0;
+  SInt16 w = 1920;
+  SInt16 h = 1080;
+  SInt16 mx = 960;
+  SInt16 my = 540;
+
+  LOG((CLOG_INFO "received client \"%s\" info shape=%d,%d %dx%d at %d,%d",
+       getName().c_str(), x, y, w, h, mx, my));
+
+  // validate
+  if (w <= 0 || h <= 0) {
+    return false;
+  }
+  if (mx < x || mx >= x + w || my < y || my >= y + h) {
+    mx = x + w / 2;
+    my = y + h / 2;
+  }
+
+  // save
+  m_info.m_x = x;
+  m_info.m_y = y;
+  m_info.m_w = w;
+  m_info.m_h = h;
+  m_info.m_mx = mx;
+  m_info.m_my = my;
+
+  // acknowledge receipt
+  LOG((CLOG_INFO "send info ack to \"%s\"", getName().c_str()));
+  ProtocolUtil::writef(getStream(), kMsgCInfoAck);
+  return true;
+}
 
 bool DummyClientProxy::recvInfo() {
+  LOG((CLOG_INFO "received client info, Parsing.."));
+
   // parse the message
   SInt16 x, y, w, h, dummy1, mx, my;
   if (!ProtocolUtil::readf(getStream(), kMsgDInfo + 4, &x, &y, &w, &h, &dummy1,

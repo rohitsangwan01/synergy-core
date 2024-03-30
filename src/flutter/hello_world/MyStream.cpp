@@ -5,7 +5,7 @@ void MyStream::close() { LOG((CLOG_INFO "MyStream::close()")); }
 
 void *MyStream::getEventTarget() const {
   LOG((CLOG_INFO "MyStream::getEventTarget()"));
-  return nullptr; // Replace with actual implementation
+  return const_cast<void *>(static_cast<const void *>(this));
 }
 
 UInt32 MyStream::read(void *buffer, UInt32 n) {
@@ -17,7 +17,7 @@ void MyStream::write(const void *buffer, UInt32 n) {
   LOG((CLOG_INFO "MyStream::write() %s", buffer));
 }
 
-void MyStream::flush() { LOG((CLOG_INFO "MyStream::getEventTarget()")); }
+void MyStream::flush() { LOG((CLOG_INFO "MyStream::flush()")); }
 
 void MyStream::shutdownInput() { LOG((CLOG_INFO "MyStream::shutdownInput()")); }
 
