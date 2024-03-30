@@ -1,33 +1,10 @@
-/*
- * synergy -- mouse and keyboard sharing utility
- * Copyright (C) 2012-2016 Symless Ltd.
- * Copyright (C) 2004 Chris Schoeneman
- *
- * This package is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * found in the file LICENSE that should have accompanied this file.
- *
- * This package is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "server/DummyClientListener.h"
-#include "server/Server.h"
-
 #include "base/IEventQueue.h"
 #include "base/Log.h"
 #include "base/TMethodEventJob.h"
-// #include "net/IDataSocket.h"
-// #include "net/IListenSocket.h"
-// #include "net/ISocketFactory.h"
-// #include "net/XSocket.h"
 #include "server/ClientProxy.h"
 #include "server/ClientProxyUnknown.h"
+#include "server/Server.h"
 #include "synergy/PacketStreamFilter.h"
 
 //
@@ -38,7 +15,6 @@ DummyClientListener::DummyClientListener(ClientProxy *client,
                                          IEventQueue *events, bool enableCrypto)
     : m_server(NULL), m_clientProxy(client), m_events(events),
       m_useSecureNetwork(enableCrypto) {
-  assert(m_socketFactory != NULL);
 
   try {
     start();
@@ -133,25 +109,6 @@ void DummyClientListener::handleClientConnecting(const Event &, void *) {
 
 void DummyClientListener::handleClientAccepted(const Event &, void *vsocket) {
   LOG((CLOG_NOTE "accepted client connection"));
-  // filter socket messages, including a packetizing filter
-  // synergy::IStream *stream = new PacketStreamFilter(m_events, socket,
-  // false); assert(m_server != NULL);
-
-  // // create proxy for unknown client
-  // ClientProxyUnknown *client =
-  //     new ClientProxyUnknown(stream, 30.0, m_server, m_events);
-
-  // m_newClients.insert(client);
-
-  // // watch for events from unknown client
-  // m_events->adoptHandler(
-  //     m_events->forClientProxyUnknown().success(), client,
-  //     new TMethodEventJob<DummyClientListener>(
-  //         this, &DummyClientListener::handleUnknownClient, client));
-  // m_events->adoptHandler(
-  //     m_events->forClientProxyUnknown().failure(), client,
-  //     new TMethodEventJob<DummyClientListener>(
-  //         this, &DummyClientListener::handleUnknownClientFailure, client));
 }
 
 void DummyClientListener::handleUnknownClient(const Event &, void *vclient) {
