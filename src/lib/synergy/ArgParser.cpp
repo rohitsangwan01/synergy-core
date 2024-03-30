@@ -68,8 +68,8 @@ ArgParser::parseServerArgs(lib::synergy::ServerArgs& args, int argc, const char*
             continue;
         }
         else {
-            LOG((CLOG_CRIT "%s: unrecognized option `%s'" BYE, args.m_pname, argv[i], args.m_pname));
-            return false;
+           // LOG((CLOG_CRIT "%s: unrecognized option `%s'" BYE, args.m_pname, argv[i], args.m_pname));
+           // return false;
         }
         ++i;
     }

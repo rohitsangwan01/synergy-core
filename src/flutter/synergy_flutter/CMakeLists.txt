@@ -20,6 +20,7 @@ set(sources
     DummyClientProxy.h
     MyStream.cpp
     MyStream.h
+    my_args.h
 )
 
 list(APPEND sources ${arch_sources})

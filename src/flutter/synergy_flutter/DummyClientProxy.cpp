@@ -39,7 +39,7 @@ DummyClientProxy::DummyClientProxy(const String &name, synergy::IStream *stream,
 
   setHeartbeatRate(kHeartRate, kHeartRate * kHeartBeatsUntilDeath);
 
-  LOG((CLOG_INFO "querying client \"%s\" info", getName().c_str()));
+  LOG((CLOG_DEBUG "querying client \"%s\" info", getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgQInfo);
 
   // Set device Info
@@ -111,7 +111,7 @@ void DummyClientProxy::handleData(const Event &, void *) {
     }
 
     // parse message
-    LOG((CLOG_INFO "msg from \"%s\": %c%c%c%c", getName().c_str(), code[0],
+    LOG((CLOG_DEBUG "msg from \"%s\": %c%c%c%c", getName().c_str(), code[0],
          code[1], code[2], code[3]));
     if (!(this->*m_parser)(code)) {
       LOG((CLOG_ERR "invalid message from client \"%s\": %c%c%c%c",
@@ -131,7 +131,7 @@ void DummyClientProxy::handleData(const Event &, void *) {
 bool DummyClientProxy::parseHandshakeMessage(const UInt8 *code) {
   if (memcmp(code, kMsgCNoop, 4) == 0) {
     // discard no-ops
-    LOG((CLOG_INFO "no-op from", getName().c_str()));
+    LOG((CLOG_DEBUG "no-op from", getName().c_str()));
     return true;
   } else if (memcmp(code, kMsgDInfo, 4) == 0) {
     // future messages get parsed by parseMessage
@@ -156,7 +156,7 @@ bool DummyClientProxy::parseMessage(const UInt8 *code) {
     return false;
   } else if (memcmp(code, kMsgCNoop, 4) == 0) {
     // discard no-ops
-    LOG((CLOG_INFO "no-op from", getName().c_str()));
+    LOG((CLOG_DEBUG "no-op from", getName().c_str()));
     return true;
   } else if (memcmp(code, kMsgCClipboard, 4) == 0) {
     return recvGrabClipboard();
@@ -204,13 +204,13 @@ void DummyClientProxy::getCursorPos(SInt32 &x, SInt32 &y) const {
 
 void DummyClientProxy::enter(SInt32 xAbs, SInt32 yAbs, UInt32 seqNum,
                              KeyModifierMask mask, bool) {
-  LOG((CLOG_INFO "send enter to \"%s\", %d,%d %d %04x", getName().c_str(), xAbs,
-       yAbs, seqNum, mask));
+  LOG((CLOG_DEBUG "send enter to \"%s\", %d,%d %d %04x", getName().c_str(),
+       xAbs, yAbs, seqNum, mask));
   ProtocolUtil::writef(getStream(), kMsgCEnter, xAbs, yAbs, seqNum, mask);
 }
 
 bool DummyClientProxy::leave() {
-  LOG((CLOG_INFO "send leave to \"%s\"", getName().c_str()));
+  LOG((CLOG_DEBUG "send leave to \"%s\"", getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgCLeave);
 
   // we can never prevent the user from leaving
@@ -223,7 +223,7 @@ void DummyClientProxy::setClipboard(ClipboardID id,
 }
 
 void DummyClientProxy::grabClipboard(ClipboardID id) {
-  LOG((CLOG_INFO "send grab clipboard %d to \"%s\"", id, getName().c_str()));
+  LOG((CLOG_DEBUG "send grab clipboard %d to \"%s\"", id, getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgCClipboard, id, 0);
 
   // this clipboard is now dirty
@@ -236,36 +236,37 @@ void DummyClientProxy::setClipboardDirty(ClipboardID id, bool dirty) {
 
 void DummyClientProxy::keyDown(KeyID key, KeyModifierMask mask, KeyButton,
                                const String &) {
-  LOG((CLOG_INFO "send key down to \"%s\" id=%d, mask=0x%04x",
+  LOG((CLOG_DEBUG "send key down to \"%s\" id=%d, mask=0x%04x",
        getName().c_str(), key, mask));
   ProtocolUtil::writef(getStream(), kMsgDKeyDown1_0, key, mask);
 }
 
 void DummyClientProxy::keyRepeat(KeyID key, KeyModifierMask mask, SInt32 count,
                                  KeyButton, const String &) {
-  LOG((CLOG_INFO "send key repeat to \"%s\" id=%d, mask=0x%04x, count=%d",
+  LOG((CLOG_DEBUG "send key repeat to \"%s\" id=%d, mask=0x%04x, count=%d",
        getName().c_str(), key, mask, count));
   ProtocolUtil::writef(getStream(), kMsgDKeyRepeat1_0, key, mask, count);
 }
 
 void DummyClientProxy::keyUp(KeyID key, KeyModifierMask mask, KeyButton) {
-  LOG((CLOG_INFO "send key up to \"%s\" id=%d, mask=0x%04x", getName().c_str(),
+  LOG((CLOG_DEBUG "send key up to \"%s\" id=%d, mask=0x%04x", getName().c_str(),
        key, mask));
   ProtocolUtil::writef(getStream(), kMsgDKeyUp1_0, key, mask);
 }
 
 void DummyClientProxy::mouseDown(ButtonID button) {
-  LOG((CLOG_INFO "send mouse down to \"%s\" id=%d", getName().c_str(), button));
+  LOG((CLOG_DEBUG "send mouse down to \"%s\" id=%d", getName().c_str(),
+       button));
   ProtocolUtil::writef(getStream(), kMsgDMouseDown, button);
 }
 
 void DummyClientProxy::mouseUp(ButtonID button) {
-  LOG((CLOG_INFO "send mouse up to \"%s\" id=%d", getName().c_str(), button));
+  LOG((CLOG_DEBUG "send mouse up to \"%s\" id=%d", getName().c_str(), button));
   ProtocolUtil::writef(getStream(), kMsgDMouseUp, button);
 }
 
 void DummyClientProxy::mouseMove(SInt32 xAbs, SInt32 yAbs) {
-  LOG((CLOG_INFO "send mouse move to \"%s\" %d,%d", getName().c_str(), xAbs,
+  LOG((CLOG_DEBUG "send mouse move to \"%s\" %d,%d", getName().c_str(), xAbs,
        yAbs));
   ProtocolUtil::writef(getStream(), kMsgDMouseMove, xAbs, yAbs);
 }
@@ -276,41 +277,41 @@ void DummyClientProxy::mouseRelativeMove(SInt32, SInt32) {
 
 void DummyClientProxy::mouseWheel(SInt32, SInt32 yDelta) {
   // clients prior to 1.3 only support the y axis
-  LOG((CLOG_INFO "send mouse wheel to \"%s\" %+d", getName().c_str(), yDelta));
+  LOG((CLOG_DEBUG "send mouse wheel to \"%s\" %+d", getName().c_str(), yDelta));
   ProtocolUtil::writef(getStream(), kMsgDMouseWheel1_0, yDelta);
 }
 
 void DummyClientProxy::sendDragInfo(UInt32 fileCount, const char *info,
                                     size_t size) {
   // ignore -- not supported in protocol 1.0
-  LOG((CLOG_INFO "draggingInfoSending not supported"));
+  LOG((CLOG_DEBUG "draggingInfoSending not supported"));
 }
 
 void DummyClientProxy::fileChunkSending(UInt8 mark, char *data,
                                         size_t dataSize) {
   // ignore -- not supported in protocol 1.0
-  LOG((CLOG_INFO "fileChunkSending not supported"));
+  LOG((CLOG_DEBUG "fileChunkSending not supported"));
 }
 
 String DummyClientProxy::getSecureInputApp() const {
   // ignore -- not supported on clients
-  LOG((CLOG_INFO "getSecureInputApp not supported"));
+  LOG((CLOG_DEBUG "getSecureInputApp not supported"));
   return "";
 }
 
 void DummyClientProxy::secureInputNotification(const String &app) const {
   // ignore -- not supported in protocol 1.0
-  LOG((CLOG_INFO "secureInputNotification not supported"));
+  LOG((CLOG_DEBUG "secureInputNotification not supported"));
 }
 
 void DummyClientProxy::screensaver(bool on) {
-  LOG((CLOG_INFO "send screen saver to \"%s\" on=%d", getName().c_str(),
+  LOG((CLOG_DEBUG "send screen saver to \"%s\" on=%d", getName().c_str(),
        on ? 1 : 0));
   ProtocolUtil::writef(getStream(), kMsgCScreenSaver, on ? 1 : 0);
 }
 
 void DummyClientProxy::resetOptions() {
-  LOG((CLOG_INFO "send reset options to \"%s\"", getName().c_str()));
+  LOG((CLOG_DEBUG "send reset options to \"%s\"", getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgCResetOptions);
 
   // reset heart rate and death
@@ -320,7 +321,7 @@ void DummyClientProxy::resetOptions() {
 }
 
 void DummyClientProxy::setOptions(const OptionsList &options) {
-  LOG((CLOG_INFO "send set options to \"%s\" size=%d", getName().c_str(),
+  LOG((CLOG_DEBUG "send set options to \"%s\" size=%d", getName().c_str(),
        options.size()));
   ProtocolUtil::writef(getStream(), kMsgDSetOptions, &options);
 
@@ -339,15 +340,15 @@ void DummyClientProxy::setOptions(const OptionsList &options) {
 }
 
 bool DummyClientProxy::setDeviceInfo(ClientInfo clientInfo) {
-  LOG((CLOG_INFO "received client info"));
+  LOG((CLOG_DEBUG "received client info"));
   m_info = clientInfo;
-  LOG((CLOG_INFO "send info ack to \"%s\"", getName().c_str()));
+  LOG((CLOG_DEBUG "send info ack to \"%s\"", getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgCInfoAck);
   return true;
 }
 
 bool DummyClientProxy::recvInfo() {
-  LOG((CLOG_INFO "received client info, Parsing.."));
+  LOG((CLOG_DEBUG "received client info, Parsing.."));
 
   // parse the message
   SInt16 x, y, w, h, dummy1, mx, my;
@@ -355,7 +356,7 @@ bool DummyClientProxy::recvInfo() {
                            &mx, &my)) {
     return false;
   }
-  LOG((CLOG_INFO "received client \"%s\" info shape=%d,%d %dx%d at %d,%d",
+  LOG((CLOG_DEBUG "received client \"%s\" info shape=%d,%d %dx%d at %d,%d",
        getName().c_str(), x, y, w, h, mx, my));
 
   // validate
@@ -376,7 +377,7 @@ bool DummyClientProxy::recvInfo() {
   m_info.m_my = my;
 
   // acknowledge receipt
-  LOG((CLOG_INFO "send info ack to \"%s\"", getName().c_str()));
+  LOG((CLOG_DEBUG "send info ack to \"%s\"", getName().c_str()));
   ProtocolUtil::writef(getStream(), kMsgCInfoAck);
   return true;
 }
@@ -393,7 +394,7 @@ bool DummyClientProxy::recvGrabClipboard() {
   if (!ProtocolUtil::readf(getStream(), kMsgCClipboard + 4, &id, &seqNum)) {
     return false;
   }
-  LOG((CLOG_INFO "received client \"%s\" grabbed clipboard %d seqnum=%d",
+  LOG((CLOG_DEBUG "received client \"%s\" grabbed clipboard %d seqnum=%d",
        getName().c_str(), id, seqNum));
 
   // validate
