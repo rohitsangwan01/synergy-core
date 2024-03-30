@@ -72,8 +72,6 @@ int main(int argc, char **argv) {
 
   // Start Server App
   DummyServerApp app(&events, &client);
-  app.args().m_configFile = "/Users/rohitsangwan/Drive/Devlopment/c++/"
-                            "synergy_core_clean/synergy.conf";
   app.args().m_daemon = false; // -f
   return app.run(argc, argv);
 }

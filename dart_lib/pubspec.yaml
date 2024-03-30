@@ -9,17 +9,8 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  ffi: ^2.1.2
-  ffigen: ^11.0.0
-  synergy_client_dart:
-    path: /Users/rohitsangwan/Drive/Devlopment/flutter/flutter_synergy_core/flutter_synergy/packages/synergy_client_dart
-
-ffigen:
-  output: 'dart_lib/generated_bindings.dart'
-  headers:
-    entry-points:
-      - 'api.h'  
-
+  synergy_client_dart: ^0.0.5
+  
 dev_dependencies:
   lints: ^2.1.0
   test: ^1.24.0
