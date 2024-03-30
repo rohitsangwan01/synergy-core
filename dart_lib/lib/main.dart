@@ -1,85 +1,17 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:ffi';
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:ffi/ffi.dart';
 import 'package:synergy_client_dart/synergy_client_dart.dart';
-import 'generated_bindings.dart';
+import 'package:synergy_test/std_server.dart';
 
 void main(List<String> args) async {
-  // executeNative();
-  // return;
-
   BasicScreen screen = BasicScreen();
 
   SynergyClientDart.setLogLevel(LogLevel.debug1);
 
   await SynergyClientDart.connect(
     screen: screen,
-    synergyServer: CmdServer(),
+    synergyServer: StdServer(),
     // synergyServer: SocketServer("0.0.0.0", 24800),
     clientName: "flutter",
   );
-}
-
-class CmdServer extends ServerInterface {
-  Process? _process;
-
-  @override
-  Future<void> connect(
-    Function(Uint8List data) onData,
-    Function(String? error) onError,
-    Function() onDone,
-  ) async {
-    _process = await Process.start(
-      "/Users/rohitsangwan/Drive/Devlopment/c++/synergy_core_clean/build/bin/synergy_flutter",
-      ["-wi", "1920", "-hi", "1080"],
-    );
-
-    _process?.stdout.listen((event) {
-      String data = utf8.decode(event);
-      data.split("\n").forEach((element) {
-        if (element.contains("Buffer")) {
-          var bytes = element.replaceFirst("Buffer:", "").trim();
-          List<String> stringByes = bytes.split(",");
-          stringByes.removeWhere((element) => element.isEmpty);
-          List<int> intBytes = [];
-          for (var e in stringByes) {
-            List<String> chars = e.split("");
-            for (String char in chars) {
-              if (char == "0") {
-                intBytes.add(0);
-              } else {
-                String remaining = chars.sublist(chars.indexOf(char)).join();
-                intBytes.add(int.tryParse(remaining) ?? 0);
-                break;
-              }
-            }
-          }
-
-          onData(Uint8List.fromList(intBytes));
-        } else if (element.isNotEmpty) {
-          print("Data: $element");
-        }
-      });
-    });
-
-    _process?.stderr.listen((event) {
-      print("error ${utf8.decode(event)}");
-    });
-  }
-
-  @override
-  Future<void> disconnect() async {
-    _process?.kill();
-  }
-
-  @override
-  Future<void> write(Uint8List data) async {
-    print("WRITING TO SERVER: $data");
-    _process?.stdin.writeln(data);
-  }
 }
 
 class BasicScreen extends ScreenInterface {
@@ -148,15 +80,4 @@ class BasicScreen extends ScreenInterface {
   void keyRepeat(int keyEventID, int mask, int count, int button) {
     print("KeyRepeat $keyEventID");
   }
-}
-
-void executeNative() async {
-  NativeLibrary nativeLibrary = NativeLibrary(DynamicLibrary.open(
-    '/Users/rohitsangwan/Drive/Devlopment/c++/synergy_core_clean/build/lib/libapi.dylib',
-  ));
-
-  Pointer<Pointer<Char>> argv = calloc<Pointer<Char>>();
-  nativeLibrary.startServer(0, argv);
-  await Future.delayed(const Duration(seconds: 5));
-  print("Done");
 }
