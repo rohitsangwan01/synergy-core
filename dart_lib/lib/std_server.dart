@@ -28,20 +28,26 @@ class StdServer extends ServerInterface {
     );
 
     _process?.stdout.listen((event) {
-      String data = utf8.decode(event);
-      data.split("\n").forEach((element) {
-        if (element.contains("Buffer")) {
-          var bytes = element.replaceFirst("Buffer:", "").trim();
-          List<String> stringByes = bytes.split(",");
-          List<int> intBytes = [];
-          for (var e in stringByes) {
-            intBytes.add(int.tryParse(e) ?? 0);
+      try {
+        String data = utf8.decode(event);
+        data.split("\n").forEach((element) {
+          if (element.startsWith("BS:")) {
+            var bytes = element.replaceFirst("BS:", "").trim();
+            List<String> stringByes = bytes.split(",");
+            stringByes.removeWhere((element) => element.isEmpty);
+            List<int> intBytes = [];
+            for (var e in stringByes) {
+              intBytes.add(int.tryParse(e) ?? 0);
+            }
+            onData(Uint8List.fromList(intBytes));
+            print(intBytes);
+          } else if (element.isNotEmpty) {
+            print("Data: $element");
           }
-          onData(Uint8List.fromList(intBytes));
-        } else if (element.isNotEmpty) {
-          print("Data: $element");
-        }
-      });
+        });
+      } catch (e) {
+        print("Error: $e");
+      }
     });
 
     _process?.stderr.listen((event) {
