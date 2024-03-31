@@ -26,4 +26,13 @@ For vintage computer enthusiasts, [Synergy Vintage](https://github.com/nbolton/s
 You can use Synergy Vintage on operating systems available from 1995 to 2006.
 
 ## Build for macos arm64
+
 cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE ..
+
+cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE ..
+
+## Run build
+
+`cd build/bin`
+
+./synergy_flutter -wi 1080 -hi 1920 -n macbook -c /Users/rohitsangwan/Drive/Devlopment/c++/synergy_core_clean/synergy.conf

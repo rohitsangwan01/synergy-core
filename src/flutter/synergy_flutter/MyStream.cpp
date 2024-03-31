@@ -19,15 +19,17 @@ UInt32 MyStream::read(void *buffer, UInt32 n) {
 }
 
 void MyStream::write(const void *buffer, UInt32 n) {
-  // write buffer as list int
-  const UInt8 *byteBuffer = static_cast<const UInt8 *>(buffer);
-  std::vector<UInt8> bufferData(byteBuffer, byteBuffer + n);
-  std::cout << "Buffer:0,0,0," << n << ",";
-  for (UInt8 byte : bufferData) {
-    if (byte == bufferData.back())
-      std::cout << static_cast<int>(byte);
-    else
-      std::cout << static_cast<int>(byte) << ',';
+  std::vector<UInt8> byteBuffer(4);
+  byteBuffer[0] = static_cast<UInt8>((n >> 24) & 0xff);
+  byteBuffer[1] = static_cast<UInt8>((n >> 16) & 0xff);
+  byteBuffer[2] = static_cast<UInt8>((n >> 8) & 0xff);
+  byteBuffer[3] = static_cast<UInt8>(n & 0xff);
+  const UInt8 *originalBuffer = static_cast<const UInt8 *>(buffer);
+  byteBuffer.insert(byteBuffer.end(), originalBuffer, originalBuffer + n);
+  // std::cout << "BS:" << originalBuffer << "-S:" << n << std::endl;
+  std::cout << "BS:";
+  for (UInt8 byte : byteBuffer) {
+    std::cout << static_cast<int>(byte) << ",";
   }
   std::cout << std::endl;
 }
