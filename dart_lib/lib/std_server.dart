@@ -20,6 +20,8 @@ class StdServer extends ServerInterface {
         "1920",
         "-hi",
         "1080",
+        "-n",
+        "macbook",
         "-c",
         "/Users/rohitsangwan/Drive/Devlopment/c++/synergy_core_clean/synergy.conf"
       ],

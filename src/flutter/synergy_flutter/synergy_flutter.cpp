@@ -44,31 +44,31 @@ int main(int argc, char **argv) {
   DummyClientProxy client(myArgs.clientName, adoptedStream, &events,
                           clientInfo);
 
-  // Start listening to client
-  std::mutex clientMutex;
-  auto io_thread = std::thread([&] {
-    std::string s;
-    while (true) {
-      try {
-        if (!std::getline(std::cin, s, '\n')) {
-          break;
-        }
-      } catch (const std::exception &e) {
-        std::cerr << "Error reading from stdin: " << e.what() << std::endl;
-        break;
-      }
-      std::string new_string = std::move(s);
-      try {
-        std::lock_guard<std::mutex> lock(clientMutex);
-        client.handleDataFromClient(new_string);
-      } catch (const std::exception &e) {
-        std::cerr << "Error handling data from client: " << e.what()
-                  << std::endl;
-      }
-    }
-  });
-  std::thread joinThread([&io_thread]() { io_thread.join(); });
-  joinThread.detach();
+  // Start listening to client input
+  // std::mutex clientMutex;
+  // auto io_thread = std::thread([&] {
+  //   std::string s;
+  //   while (true) {
+  //     try {
+  //       if (!std::getline(std::cin, s, '\n')) {
+  //         break;
+  //       }
+  //     } catch (const std::exception &e) {
+  //       std::cerr << "Error reading from stdin: " << e.what() << std::endl;
+  //       break;
+  //     }
+  //     std::string new_string = std::move(s);
+  //     try {
+  //       std::lock_guard<std::mutex> lock(clientMutex);
+  //       client.handleDataFromClient(new_string);
+  //     } catch (const std::exception &e) {
+  //       std::cerr << "Error handling data from client: " << e.what()
+  //                 << std::endl;
+  //     }
+  //   }
+  // });
+  // std::thread joinThread([&io_thread]() { io_thread.join(); });
+  // joinThread.detach();
 
   // Start Server App
   DummyServerApp app(&events, &client);
